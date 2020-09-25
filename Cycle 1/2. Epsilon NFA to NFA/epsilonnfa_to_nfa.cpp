@@ -1,6 +1,5 @@
 #include <iostream>
 #include <vector>
-#include <set>
 #include <unordered_map>
 #include <unordered_set>
 
@@ -8,14 +7,14 @@ using namespace std;
 
 class NFA
 {
-    int noOfStates;
+    int nStates;
     unordered_set<char> states;
-    int noOfSymbols;
+    int nSymbols;
     unordered_set<char> symbols;
-    int noOfTransitions;
+    int nTransitions;
     unordered_map<char, vector<pair<char, char>>> transitions;
-    set<char> initialStates;
-    set<char> finalStates;
+    unordered_set<char> initialStates;
+    unordered_set<char> finalStates;
 
     void printStates()
     {
@@ -25,18 +24,45 @@ class NFA
         cout << endl;
     }
 
+    void printNFA()
+    {
+        cout << "\nStart states: \n";
+        for (auto s : initialStates)
+        {
+            cout << s << ", ";
+        }
+        cout << "\nEnd states: \n";
+        for (auto s : finalStates)
+        {
+            cout << s << ", ";
+        }
+        cout << "\nTransitions: \n";
+        for (auto t : transitions)
+        {
+            for (auto trans : t.second)
+            {
+                cout << t.first << "\t" << trans.first << "\t" << trans.second << "\n";
+            }
+        }
+    }
+
 public:
-    NFA(int nst, int nsy, int ntr) : noOfStates{nst}, noOfSymbols{nsy}, noOfTransitions{ntr}
+    NFA(int nst, int nsy, int ntr) : nStates{nst}, nSymbols{nsy}, nTransitions{ntr}
     {
         // Epsilon is valid symbol for all NFA
         symbols.insert('e');
+
+        // Input all the required data to finish constructing the NFA
+        inputStates();
+        inputSymbols();
+        inputTransitions();
     }
 
     void inputSymbols()
     {
         cout << "Enter symbols. Each symbols must be represented with a single character\nEpsilon is already considered and should not be entered here\n";
         char curr;
-        for (int i = 0; i < noOfSymbols; i++)
+        for (int i = 0; i < nSymbols; i++)
         {
             cin >> curr;
             symbols.insert(curr);
@@ -45,9 +71,9 @@ public:
 
     void inputStates()
     {
-        cout << "Enter the states (Each state must be represented by a single character): ";
+        cout << "Enter the states: (Each state must be represented with a single character)\n";
         char curr;
-        for (int i = 0; i < noOfStates; i++)
+        for (int i = 0; i < nStates; i++)
         {
             cin >> curr;
             states.insert(curr);
@@ -57,17 +83,17 @@ public:
         cout << "Enter no. of initial states: ";
         int is;
         cin >> is;
-        cout << "Enter initial states\n";
+        cout << "Enter initial states: ";
         for (int i = 0; i < is; i++)
         {
             cin >> curr;
             initialStates.insert(curr);
         }
 
-        cout << "Enter no. final states\n";
+        cout << "Enter no. of final states: ";
         int fs;
         cin >> fs;
-        cout << "Enter final states\n";
+        cout << "Enter final states: ";
         for (int i = 0; i < fs; i++)
         {
             cin >> curr;
@@ -77,10 +103,10 @@ public:
 
     void inputTransitions()
     {
-        cout << "Enter transitions in the format startstate symbol end state\ne is taken as epsilon\n";
-        char from, s, to; // s - symbol, from - from state, to - to state.
+        cout << "Enter transitions in the format \"<start state> <symbol> <end state>\"\n\"e\" is taken as epsilon\n";
+        char from, s, to;
         int i = 0;
-        while (i < noOfTransitions)
+        while (i < nTransitions)
         {
             cin >> from >> s >> to;
             if (states.find(from) == states.end() || states.find(to) == states.end())
@@ -113,15 +139,15 @@ public:
                 break;
             }
         }
-        for (auto t : to_trans)
+        for (auto it : to_trans)
         {
-            if (t.first != 'e')
+            if (it.first != 'e')
             {
-                transitions[from].push_back({t.first, t.second});
+                transitions[from].push_back(make_pair(it.first, it.second));
             }
             else
             {
-                removeEpsilonTransition(to, t.second);
+                removeEpsilonTransition(to, it.second);
             }
         }
         if (initialStates.find(from) != initialStates.end())
@@ -134,7 +160,7 @@ public:
         }
     }
 
-    void findNFA()
+    void findNFAWithoutEpsilon()
     {
         for (auto it : transitions)
         {
@@ -148,28 +174,7 @@ public:
                 }
             }
         }
-    }
-
-    void printNFA()
-    {
-        cout << "\nStart states: \n";
-        for (auto s : initialStates)
-        {
-            cout << s << ", ";
-        }
-        cout << "\nEnd states: \n";
-        for (auto s : finalStates)
-        {
-            cout << s << ", ";
-        }
-        cout << "\nTransitions: \n";
-        for (auto t : transitions)
-        {
-            for (auto trans : t.second)
-            {
-                cout << t.first << "\t" << trans.first << "\t" << trans.second << "\n";
-            }
-        }
+        printNFA();
     }
 };
 
@@ -183,9 +188,6 @@ int main()
     cout << "Enter number of transitions: ";
     cin >> transitions;
     NFA z{states, symbols, transitions};
-    z.inputStates();
-    z.inputSymbols();
-    z.inputTransitions();
-    z.findNFA();
-    z.printNFA();
+
+    z.findNFAWithoutEpsilon();
 }
